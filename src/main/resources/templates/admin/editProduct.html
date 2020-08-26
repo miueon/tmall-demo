@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:include="include/admin/adminHeader::html('Edit product')" ></head>
+<body>
+<div th:replace="include/admin/adminNavigator::html" ></div>
+<script>
+    $(function(){
+        const data4Vue = {
+            uri: 'products',
+            listURL: 'admin_product_list',
+            bean: '',
+            category: ''
+        };
+
+        //ViewModel
+        const vue = new Vue({
+            el: '#workingArea',
+            data: data4Vue,
+            mounted:function(){
+                this.get();
+            },
+            methods: {
+                get:function(){
+                    const id = getUrlParms("id");
+                    const url = this.uri+"/"+id;
+                    axios.get(url).then(function(response) {
+                        vue.bean = response.data;
+                        vue.category = vue.bean.category;
+                    })
+                },
+                update:function () {
+                    if(!checkEmpty(this.bean.name, "Product name"))
+                        return;
+                    if (!checkEmpty(this.bean.subTitle, "Subtitle"))
+                        return;
+                    if (!checkNumber(this.bean.originalPrice, "Original price"))
+                        return;
+                    if (!checkNumber(this.bean.promotedPrice, "Service price"))
+                        return;
+                    if (!checkInt(this.bean.stock, "stock"))
+                        return;
+                    const url = this.uri;
+                    axios.put(url,vue.bean).then(function(response){
+                        location.href=vue.listURL+"?cid="+vue.category.id;
+                    });
+                }
+            }
+        });
+    });
+</script>
+
+<div id="workingArea">
+
+    <ol class="breadcrumb">
+        <li><a href="admin_category_list">All categories</a></li>
+        <li><a :href="'admin_product_list?cid='+category.id">{{category.name}}</a></li>
+        <li class="active">Product manage</li>
+    </ol>
+
+    <div class="panel panel-warning editDiv">
+        <div class="panel-heading">Edit product</div>
+        <div class="panel-body">
+            <table class="editTable">
+                <tr>
+                    <td>Product name</td>
+                    <td>
+                        <input  @keyup.enter="update" v-model.trim="bean.name"
+                                type="text" class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Product subtitle</td>
+                    <td>
+                        <input  @keyup.enter="update" v-model.trim="bean.subTitle" type="text"
+                                class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Original price</td>
+                    <td>
+                        <input  @keyup.enter="update" v-model.trim="bean.originalPrice"  type="text"
+                                class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Service price</td>
+                    <td>
+                        <input  @keyup.enter="update" v-model.trim="bean.promotedPrice" type="text"
+                                class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Stock</td>
+                    <td>
+                        <input  @keyup.enter="update" v-model.trim="bean.stock"  type="text"
+                                class="form-control">
+                    </td>
+                </tr>
+                <tr class="submitTR">
+                    <td colspan="2" align="center">
+                        <input type="hidden" name="id"   v-model.trim="bean.id" >
+                        <a href="#nowhere" class="btn btn-success" @click="update">Submit</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="include/admin/adminFooter::html" ></div>
+</body>
+</html>

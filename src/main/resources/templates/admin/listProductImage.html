@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:include="include/admin/adminHeader::html('Product manage')" ></head>
+<body>
+<div th:replace="include/admin/adminNavigator::html" ></div>
+<script>
+    $(function(){
+        const pid = getUrlParms("pid");
+        const data4Vue = {
+            uri:'productImages',
+            singleProductImages: [],
+            detailProductImages: [],
+            product: '',
+            category:'',
+            singleFile:'',
+            detailFile:''
+        };
+
+        //ViewModel
+        const vue = new Vue({
+            el: '#workingArea',
+            data: data4Vue,
+            mounted:function(){
+                this.listSingles();
+                this.listDetails();
+                this.getProduct(pid);
+            },
+            methods: {
+                getProduct:function(pid){
+                    const url = "products/"+pid;
+                    axios.get(url).then(function(response) {
+                        vue.product = response.data;
+                        vue.category = vue.product.category;
+                    })
+                },
+                listSingles:function(start){
+                    const url =  "products/"+pid+"/"+this.uri+"?type=single";
+                    axios.get(url).then(function(response) {
+                        vue.singleProductImages = response.data;
+                    });
+                },
+                listDetails:function(start){
+                    var url =  "products/"+pid+"/"+this.uri+"?type=detail";
+                    axios.get(url).then(function(response) {
+                        vue.detailProductImages = response.data;
+                    });
+                },
+                addSingle: function () {
+                    if(!checkEmpty(this.singleFile, "Single product image"))
+                        return;
+
+                    const url = this.uri+"?type=single&pid="+pid;
+
+                    let formData = new FormData();
+                    formData.append("image", this.singleFile);
+
+                    axios.post(url,formData).then(function(response){
+                        vue.listSingles();
+                        $("#singlePic").val('');
+                        vue.singleFile = null;
+                    });
+                },
+                addDetail: function () {
+                    if(!checkEmpty(this.detailFile, "Detail product image"))
+                        return;
+
+                    const url = this.uri+"?type=detail&pid="+pid;
+
+                    let formData = new FormData();
+                    formData.append("image", this.detailFile);
+
+                    axios.post(url,formData).then(function(response){
+                        vue.listDetails();
+                        $("#detailPic").val('');
+                        vue.detailFile = null;
+                    });
+                },
+                deleteBean: function (id) {
+                    if(!checkDeleteLink())
+                        return;
+                    const url = this.uri+"/"+id;
+                    axios.delete(url).then(function(response){
+                        vue.listSingles();
+                        vue.listDetails();
+                    });
+                },
+                getSingleFile: function (event) {
+                    this.singleFile = event.target.files[0];
+                },
+                getDetailFile: function (event) {
+                    this.detailFile = event.target.files[0];
+                },
+            }
+
+        });
+    });
+
+</script>
+
+<div id="workingArea" >
+    <ol class="breadcrumb">
+        <li><a href="admin_category_list">All categories</a></li>
+        <li><a :href="'admin_product_list?cid='+category.id">{{category.name}}</a></li>
+        <li class="active">{{product.name}}</li>
+        <li class="active">Product image manage</li>
+    </ol>
+
+    <table class="addPictureTable" align="center">
+        <tr>
+            <td class="addPictureTableTD">
+                <div>
+                    <div class="panel panel-warning addPictureDiv">
+                        <div class="panel-heading">Add product
+                            <b class="text-primary"> Single</b>Image</div>
+                        <div class="panel-body">
+                            <table class="addTable">
+                                <tr>
+                                    <td>upload product image,recommend 400*400</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input id="singlePic" type="file"
+                                               @change="getSingleFile($event)" name="image" />
+                                    </td>
+                                </tr>
+                                <tr class="submitTR">
+                                    <td align="center">
+                                        <button type="submit" @click="addSingle"
+                                                class="btn btn-success">Submit</button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <table class="table table-striped table-bordered table-hover  table-condensed">
+                        <thead>
+                        <tr class="success">
+                            <th>ID</th>
+                            <th>Product single image thumbnail</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="pi in singleProductImages">
+                            <td>{{pi.id}}</td>
+                            <td>
+                                <a title="Click to origin"
+                                   :href="'img/productSingle/'+pi.id+'.jpg'">
+                                    <img height="50px" :src="'img/productSingle/'+pi.id+'.jpg'">
+                                </a>
+                            </td>
+                            <td>
+                                <a href="#nowhere" @click="deleteBean(pi.id)">
+                                <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </td>
+            <td class="addPictureTableTD">
+                <div>
+
+                    <div class="panel panel-warning addPictureDiv">
+                        <div class="panel-heading">Add product
+                            <b class="text-primary"> Detail </b>Image</div>
+                        <div class="panel-body">
+                            <table class="addTable">
+                                <tr>
+                                    <td>Upload Product image recommend width 700</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input id="detailPic" type="file"
+                                               @change="getDetailFile($event)" name="image" />
+                                    </td>
+                                </tr>
+                                <tr class="submitTR">
+                                    <td align="center">
+                                        <button type="submit" @click="addDetail"
+                                                class="btn btn-success">Submit</button>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </div>
+                    </div>
+                    <table class="table table-striped table-bordered table-hover  table-condensed">
+                        <thead>
+                        <tr class="success">
+                            <th>ID</th>
+                            <th>Detail product image thumbnail</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="pi in detailProductImages">
+                            <td>{{pi.id}}</td>
+                            <td>
+                                <a title="Click to original"
+                                   :href="'img/productDetail/'+pi.id+'.jpg'">
+                                    <img height="50px" :src="'img/productDetail/'+pi.id+'.jpg'">
+                                </a>
+                            </td>
+                            <td>
+                                <a href="#nowhere" @click="deleteBean(pi.id)">
+                                <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+<div th:replace="include/admin/adminFooter::html" ></div>
+</body>
+</html>
