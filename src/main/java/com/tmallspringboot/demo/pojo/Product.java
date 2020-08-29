@@ -29,6 +29,6 @@ public class Product {
     private int stock;
     private Date createDate;
 
-    @Transient // use to ignore the annoted filed
+    @Transient // TODO: the transient data should fill by its data Service
     private ProductImage firstProductImage;
 }

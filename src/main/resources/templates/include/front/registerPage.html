@@ -1,0 +1,103 @@
+<div th:fragment="html">
+    <script>
+        $(function(){
+            let data4Vue = {
+                uri:'frontregister',
+                result: [],
+                user:{name:'', password:'', repeatpassword:''}
+            };
+            //ViewModel
+            let vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){
+                    linkDefaultActions();
+                },
+                methods: {
+                    register:function(){
+                        let url =  this.uri;
+                        if(0===this.user.name.length){
+                            $("span.errorMessage").html("Please input username");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+                        if(0===this.user.password.length){
+                            $("span.errorMessage").html("Please input password");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+                        if(0===this.user.repeatpassword.length){
+                            $("span.errorMessage").html("Please input password again");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+                        if(this.user.password !==this.user.repeatpassword){
+                            $("span.errorMessage").html("Password can't match");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+
+                        axios.post(url,this.user).then(function(response) {
+                            let result = response.data;
+                            if(result.code===0){
+                                location.href="registerSuccess";
+                            }
+                            else{
+                                $("span.errorMessage").html(result.message);
+                                $("div.registerErrorMessageDiv")
+                                    .css("visibility","visible");
+                            }
+                        });
+                    }
+                }
+            });
+        })
+    </script>
+    <div class="registerDiv">
+        <div class="registerErrorMessageDiv">
+            <div class="alert alert-danger" role="alert">
+                <button type="button" class="close" data-dismiss="alert"
+                        aria-label="Close"></button>
+                <span class="errorMessage"></span>
+            </div>
+        </div>
+
+        <table class="registerTable" align="center">
+            <tr>
+                <td  class="registerTip registerTableLeftTD">Set member name</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="registerTableLeftTD">Login name</td>
+                <td  class="registerTableRightTD">
+                    <input v-model="user.name"
+                           placeholder="The member name once sated won't be able to change " >
+                </td>
+            </tr>
+            <tr>
+                <td  class="registerTip registerTableLeftTD">set password</td>
+                <td  class="registerTableRightTD">For login, and protect your account</td>
+            </tr>
+            <tr>
+                <td class="registerTableLeftTD">password</td>
+                <td class="registerTableRightTD">
+                    <input v-model="user.password"  type="password"
+                           placeholder="set your password" >
+                </td>
+            </tr>
+            <tr>
+                <td class="registerTableLeftTD">Password confirm</td>
+                <td class="registerTableRightTD">
+                    <input v-model="user.repeatpassword"
+                           type="password"  placeholder="Please input your password again" >
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" class="registerButtonTD">
+                    <a @click="register"><button>Submit</button></a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+<nav class="top" th:fragment="html">
+    <a th:href="${application.contextPath}">
+        <span style="color:#C40000;margin:0px"
+              class=" glyphicon glyphicon-home redColor"></span>
+        Main page
+    </a>
+
+    <span>meow, welcome to tmall</span>
+
+    <span th:if="${null!=session.user}">
+		<a href="login" th:text="${session.user.name}"></a>
+		<a href="/frontlogout" >logout</a>
+	</span>
+
+    <span th:if="${null==session.user}">
+		<a href="login">Login</a>
+		<a href="register">Register</a>
+	</span>
+
+    <span class="pull-right">
+			<a href="bought">My order</a>
+			<a href="cart">
+			<span style="color:#C40000;margin:0px"
+                  class=" glyphicon glyphicon-shopping-cart redColor">
+            </span>Cart<strong th:text="${session.cartTotalItemNumber}"></strong></a>
+	</span>
+</nav>
+

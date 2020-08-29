@@ -2,6 +2,7 @@ package com.tmallspringboot.demo.service;
 
 import com.tmallspringboot.demo.dao.CategoryDAO;
 import com.tmallspringboot.demo.pojo.Category;
+import com.tmallspringboot.demo.pojo.Product;
 import com.tmallspringboot.demo.util.Page4Navigator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -45,5 +46,32 @@ public class CategoryService {
 
     public void update(Category bean) {
         categoryDAO.save(bean);
+    }
+
+    public void removeCategoryFromProduct(List<Category> cs) {
+        for (Category category : cs) {
+            removeCategoryFromProduct(category);
+        }
+    }
+    // When the RESTController converts the category pojo, it will recursively convert array inside
+    // the pojo. however, the list contains product, and the product contains category
+    // so if we don't remove the category from product, the program will crush by infinite loop.
+
+    public void removeCategoryFromProduct(Category category) {
+        List<Product> products =category.getProducts();
+        if(null!=products) {
+            for (Product product : products) {
+                product.setCategory(null);
+            }
+        }
+
+        List<List<Product>> productsByRow =category.getProductsByRow();
+        if(null!=productsByRow) {
+            for (List<Product> ps : productsByRow) {
+                for (Product p: ps) {
+                    p.setCategory(null);
+                }
+            }
+        }
     }
 }
