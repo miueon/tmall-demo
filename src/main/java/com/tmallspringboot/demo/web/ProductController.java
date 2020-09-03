@@ -28,7 +28,7 @@ public class ProductController {
         start = start < 0 ? 0 : start;
 
         var page =  productService.list(cid, start, size, 5);
-        productImageService.setFirstProdutImages(page.getContent()); // 运行计算字段
+        productImageService.setFirstProductImages(page.getContent()); // 运行计算字段
         return page;
     }
 

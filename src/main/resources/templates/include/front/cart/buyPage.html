@@ -1,0 +1,179 @@
+<div th:fragment="html">
+    <script>
+        $(function(){
+            let oiid = getUrlParms("oiid");
+            let data4Vue = {
+                uri:'frontbuy',
+                total:0,
+                orderItems:[],
+                order:{address:'',post:'',receiver:'',mobile:'',userMessage:''}
+            };
+            //ViewModel
+            let vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){
+                    this.load();
+                },
+                methods: {
+                    load:function(){
+                        let url =  this.uri+"/?oiid="+oiid;
+                        axios.get(url).then(function(response) {
+                            let result = response.data;
+                            vue.total = result.data.total;
+                            vue.orderItems = result.data.orderItems;
+
+                            vue.$nextTick(function(){
+                                linkDefaultActions();
+                            })
+                        });
+                    },
+                    submitOrder:function(){
+                        let url =  "frontcreateOrder";
+                        axios.post(url,this.order).then(function(response) {
+                            let result = response.data;
+                            let oid = result.data.oid;
+                            let total = result.data.total;
+                            location.href="alipay?oid="+oid+"&total="+total;
+                        });
+                    }
+                }
+            });
+
+        })
+    </script>
+    <div class="buyPageDiv">
+        <div class="buyFlow">
+            <img class="pull-left" src="img/site/simpleLogo.png">
+            <img class="pull-right" src="img/site/buyflow.png">
+            <div style="clear:both"></div>
+        </div>
+        <div class="address">
+            <div class="addressTip">Input your shipping addr.</div>
+            <div>
+
+                <table class="addressTable">
+                    <tr>
+                        <td class="firstColumn">Addr. detailed<span class="redStar">*</span></td>
+
+                        <td><textarea name="address" v-model="order.address"
+                                      placeholder="input your name, zip-code, district addr. ">
+
+                        </textarea></td>
+                    </tr>
+                    <tr>
+                        <td>Zip-code</td>
+                        <td><input  name="post" v-model="order.post"
+                                    placeholder="if you are not sure about your zip-code, type 000000"
+                                    type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Receiver name<span class="redStar">*</span></td>
+                        <td><input  name="receiver"  v-model="order.receiver"
+                                    placeholder="less than 25 characters" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Phone number <span class="redStar">*</span></td>
+                        <td><input name="mobile"  v-model="order.mobile"
+                                   placeholder="Input your phone number" type="text"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="productList">
+            <div class="productListTip">Confirm order msg</div>
+
+            <table class="productListTable">
+                <thead>
+                <tr>
+                    <th colspan="2" class="productListTableFirstColumn">
+                        <img class="tmallbuy" src="img/site/tmallbuy.png">
+                        <a class="marketLink" href="#nowhere">Store：tmall store</a>
+                        <a class="wangwanglink" href="#nowhere"> <span class="wangwangGif"></span> </a>
+                    </th>
+                    <th>Unit price</th>
+                    <th>Quantity</th>
+                    <th>Summary</th>
+                    <th>Shipping method</th>
+                </tr>
+                <tr class="rowborder">
+                    <td  colspan="2" ></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                </thead>
+                <tbody class="productListTableTbody">
+                <tr class="orderItemTR" v-for="oi,index in orderItems" >
+                    <td class="orderItemFirstTD">
+                        <img class="orderItemImg"
+                             :src="'img/productSingle_middle/'+oi.product.firstProductImage.id+'.jpg'">
+                    </td>
+                    <td class="orderItemProductInfo">
+                        <a  :href="'product?pid='+oi.product.id" class="orderItemProductLink">
+                            {{oi.product.name}}
+                        </a>
+                        <img src="img/site/creditcard.png" title="Accept credit card">
+                        <img src="img/site/7day.png" title="7 day trial">
+                        <img src="img/site/promise.png" title="Promise quality">
+                    </td>
+                    <td>
+								<span class="orderItemProductPrice">
+									{{oi.product.promotePrice | formatMoneyFilter}}
+								</span>
+                    </td>
+                    <td>
+                        <span class="orderItemProductNumber">{{oi.number}}</span>
+                    </td>
+                    <td>
+								<span class="orderItemUnitSum">
+									{{oi.product.promotedPrice*oi.number | formatMoneyFilter}}
+								</span>
+                    </td>
+                    <td rowspan="5" class="orderItemLastTD" v-if="index==0" >
+                        <label class="orderItemDeliveryLabel">
+                            <input type="radio" value="" checked="checked">
+                            Ordinary shipping
+                        </label>
+                        <label>
+                            <select class="orderItemDeliverySelect form-control">
+                                <option>Free express delivery</option>
+                            </select>
+                        </label>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="orderItemSumDiv">
+                <div class="pull-left">
+                    <span class="leaveMessageText">Comment to seller:</span>
+                    <span>
+						<img class="leaveMessageImg" src="img/site/leaveMessage.png">
+					</span>
+                    <span class="leaveMessageTextareaSpan">
+						<textarea name="userMessage" v-model="order.userMessage"
+                                  class="leaveMessageTextarea"></textarea>
+						<div>
+							<span>200 chars available</span>
+						</div>
+					</span>
+                </div>
+                <span class="pull-right">Summary(including delivery cost): ￥
+					{{total|formatMoneyFilter}}
+				</span>
+            </div>
+
+        </div>
+        <div class="orderItemTotalSumDiv">
+            <div class="pull-right">
+                <span>Actual cost：</span>
+                <span class="orderItemTotalSumSpan">{{total|formatMoneyFilter}}</span>
+            </div>
+        </div>
+        <div class="submitOrderDiv">
+            <button type="submit" class="submitOrderButton" @click="submitOrder">
+                Submit order</button>
+        </div>
+    </div>
+</div>

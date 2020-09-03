@@ -1,0 +1,69 @@
+
+
+<div th:fragment="html">
+    <script>
+        $(function(){
+            let oid = getUrlParms("oid");
+            let total = getUrlParms("total");
+            let data4Vue = {
+                uri:'frontpayed',
+                order:[],
+                total:0
+            };
+            //ViewModel
+            let vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){
+                    this.total = total;
+                    this.load();
+                },
+                methods: {
+                    load:function(){
+                        let url =  this.uri+"?oid="+oid;
+                        axios.get(url).then(function(response) {
+                            vue.order = response.data;
+                        });
+                    }
+                }
+            });
+
+        })
+
+    </script>
+
+    <div class="payedDiv">
+        <div class="payedTextDiv">
+            <img src="img/site/paySuccess.png">
+            <span>Purchase succeed</span>
+
+        </div>
+        <div class="payedAddressInfo">
+            <ul>
+                <li>Addr.：{{order.address}} {{order.receiver}} {{order.mobile }}</li>
+                <li>Actual payment：<span class="payedInfoPrice">
+					{{total|formatMoney}}
+                </span></li>
+                <li>Expected delivery days: 3</li>
+            </ul>
+
+            <div class="paedCheckLinkDiv">
+                您可以
+                <a class="payedCheckLink" href="bought">Check purchased products</a>
+                <a class="payedCheckLink" href="bought">Check purchase details </a>
+            </div>
+
+        </div>
+
+        <div class="payedSeperateLine">
+        </div>
+
+        <div class="warningDiv">
+            <img src="img/site/warning.png">
+            <b>Safety advice：</b>After ordered，<span class="redColor boldWord">
+            All the link send by IMS other than meow meow is a swindle one.</span>
+            Our system doesn't exist any updating or anomalous order problems.
+        </div>
+    </div>
+</div>
+

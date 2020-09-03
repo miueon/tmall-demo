@@ -6,10 +6,11 @@ import org.springframework.data.elasticsearch.annotations.Document;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
-@JsonIgnoreProperties({ "handler","hibernateLazyInitializer"})
+@JsonIgnoreProperties({"handler", "hibernateLazyInitializer"})
 //@Document(indexName = "tmall_springboot")
 @Data
 public class Product {
@@ -29,6 +30,24 @@ public class Product {
     private int stock;
     private Date createDate;
 
-    @Transient // TODO: the transient data should fill by its data Service
+    @Transient //  the transient data should fill by its data Service
+    // this is for presentation init
     private ProductImage firstProductImage;
+
+    @Transient
+    private List<ProductImage> productSingleImages;
+    @Transient
+    private List<ProductImage> productDetailImages;
+    @Transient
+    private int saleCount;
+    @Transient
+    private int reviewCount;
+
+    @Override
+    public String toString() {
+        return "Product [id=" + id + ", category=" + category + ", name=" + name + ", subTitle=" + subTitle
+                + ", originalPrice=" + originalPrice + ", promotePrice=" + promotedPrice + ", stock=" + stock
+                + ", createDate=" + createDate + ", firstProductImage=" + firstProductImage + ", reviewCount="
+                + reviewCount + ", saleCount=" + saleCount + "]";
+    }
 }

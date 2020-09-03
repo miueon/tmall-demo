@@ -1,0 +1,230 @@
+<div th:fragment="html">
+
+    <script>
+        function imgAndInfoPageRegisterListeners(vue){
+            let stock = vue.p.stock;
+            $(".productNumberSetting").keyup(function(){
+                let num= $(".productNumberSetting").val();
+                num = parseInt(num);
+                if(isNaN(num))
+                    num= 1;
+                if(num<=0)
+                    num = 1;
+                if(num>stock)
+                    num = stock;
+                $(".productNumberSetting").val(num);
+            });
+
+            $(".increaseNumber").click(function(){
+                let num= $(".productNumberSetting").val();
+                num++;
+                if(num>stock)
+                    num = stock;
+                $(".productNumberSetting").val(num);
+            });
+            $(".decreaseNumber").click(function(){
+                let num= $(".productNumberSetting").val();
+                --num;
+                if(num<=0)
+                    num=1;
+                $(".productNumberSetting").val(num);
+            });
+
+            $(".addCartButton").removeAttr("disabled");
+            $(".addCartLink").click(function(){
+                let url = "frontcheckLogin";
+                axios.get(url).then(function(response) {
+                    if(0===response.data.code){
+                        let pid = vue.p.id;
+                        let num= $(".productNumberSetting").val();
+                        let url =  "frontaddCart?pid="+pid+"&num="+num;
+                        axios.get(url).then(function(response) {
+                            let result = response.data;
+                            if(0===result.code){
+                                $(".addCartButton").html("Added in cart");
+                                $(".addCartButton").attr("disabled","disabled");
+                                $(".addCartButton").css("background-color","lightgray")
+                                $(".addCartButton").css("border-color","lightgray")
+                                $(".addCartButton").css("color","black")
+                            }
+                        });
+                    }
+                    else{
+                        $("#loginModal").modal('show');
+                    }
+                });
+            });
+            $(".buyLink").click(function(){
+                let url = "frontcheckLogin";
+                console.log("buy")
+                axios.get(url).then(function(response) {
+                    if(0===response.data.code){
+                        let pid = vue.p.id;
+                        let num= $(".productNumberSetting").val();
+                        let url =  "frontbuyone?pid="+pid+"&num="+num;
+                        axios.get(url).then(function(response) {
+                            let oiid = response.data;
+                            location.href="buy?oiid="+oiid;
+                        });
+                    }
+                    else{
+                        $("#loginModal").modal('show');
+                    }
+                });
+                return false;
+            });
+
+            $("button.loginSubmitButton").click(function(){
+                let url =  "frontlogin";
+                if(0===vue.user.name.length){
+                    $("span.errorMessage").html("Input username");
+                    $("div.loginErrorMessageDiv").css("visibility","visible");
+                    return;
+                }
+                if(0===vue.user.password.length){
+                    $("span.errorMessage").html("Input password");
+                    $("div.loginErrorMessageDiv").css("visibility","visible");
+                    return;
+                }
+
+                axios.post(url,vue.user).then(function(response) {
+                    let result = response.data;
+                    if(result.code===0){
+                        location.href="product?pid="+vue.p.id;
+                    }
+                    else{
+                        $("span.errorMessage").html(result.message);
+                        $("div.loginErrorMessageDiv").css("visibility","visible");
+                    }
+                });
+            });
+
+            $("img.smallImage").mouseenter(function(){
+                let bigImageURL = $(this).attr("bigImageURL");
+                $("img.bigImg").attr("src",bigImageURL);
+            });
+
+            $("img.bigImg").load(
+                function(){
+                    $("img.smallImage").each(function(){
+                        let bigImageURL = $(this).attr("bigImageURL");
+                        img = new Image();
+                        img.src = bigImageURL;
+
+                        img.onload = function(){
+                            $("div.img4load").append($(img));
+                        };
+                    });
+                }
+            );
+        }
+
+    </script>
+
+    <div class="imgAndInfo">
+
+        <div class="imgInimgAndInfo">
+            <img v-if="firstProductImage!=null"
+                 :src="'img/productSingle/'+firstProductImage.id+'.jpg'" class="bigImg">
+            <div class="smallImageDiv">
+                <img v-for="pi in p.productSingleImages"
+                     :src="'img/productSingle_small/'+pi.id+'.jpg'"
+                     :bigImageURL="'img/productSingle/'+pi.id+'.jpg'" class="smallImage">
+            </div>
+            <div class="img4load hidden" ></div>
+        </div>
+
+        <div class="infoInimgAndInfo">
+
+            <div class="productTitle">
+                {{p.name}}
+            </div>
+            <div class="productSubTitle">
+                {{p.subTitle}}
+            </div>
+
+            <div class="productPrice">
+                <div class="juhuasuan">
+                    <span class="juhuasuanBig" >blah</span>
+                    <span>This product is in effective cost，
+                        <span class="juhuasuanTime">after
+                    </span>X days x hours</span>
+                </div>
+
+                <div class="productPriceDiv">
+                    <div class="gouwujuanDiv">
+                        <img height="16px"
+                             src="img/site/gouwujuan.png">
+                        <span> For all physical products in Tmall</span>
+
+                    </div>
+                    <div class="originalDiv">
+                        <span class="originalPriceDesc">Price</span>
+                        <span class="originalPriceYuan">$</span>
+                        <span class="originalPrice">
+	                    	{{p.originalPrice|formatMoneyFilter}}
+	                    </span>
+                    </div>
+
+                    <div class="promotionDiv">
+                        <span class="promotionPriceDesc">Promote Price </span>
+                        <span class="promotionPriceYuan">$</span>
+                        <span class="promotionPrice">
+							{{p.promotedPrice|formatMoneyFilter}}
+	                    </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="productSaleAndReviewNumber">
+                <div>Sales:
+                    <span class="redColor boldWord"> {{ p.saleCount }}</span></div>
+                <div>Review accumulated:
+                    <span class="redColor boldWord"> {{ p.reviewCount }}</span></div>
+            </div>
+            <div class="productNumber">
+                <span>Num</span>
+                <span>
+	                <span class="productNumberSettingSpan">
+	                <input class="productNumberSetting" type="text" value="1">
+	                </span>
+	                <span class="arrow">
+	                    <a href="#nowhere" class="increaseNumber">
+	                    <span class="updown">
+	                            <img src="img/site/increase.png">
+	                    </span>
+	                    </a>
+
+	                    <span class="updownMiddle"> </span>
+	                    <a href="#nowhere"  class="decreaseNumber">
+	                    <span class="updown">
+	                            <img src="img/site/decrease.png">
+	                    </span>
+	                    </a>
+
+	                </span>
+
+	            </span>
+                <span>Stocks: {{p.stock}}</span>
+            </div>
+            <div class="serviceCommitment">
+                <span class="serviceCommitmentDesc">blah</span>
+                <span class="serviceCommitmentLink">
+	                <a href="#nowhere">blah</a>
+	                <a href="#nowhere">blah</a>
+	                <a href="#nowhere">blah</a>
+	                <a href="#nowhere">blah</a>
+	            </span>
+            </div>
+
+            <div class="buyDiv">
+                <a class="buyLink" ><button class="buyButton" >Buy now</button></a>
+                <a href="#nowhere" class="addCartLink"><button class="addCartButton">
+                    <span class="glyphicon glyphicon-shopping-cart"></span>Add to cart</button></a>
+            </div>
+        </div>
+
+        <div style="clear:both"></div>
+
+    </div>
+</div>

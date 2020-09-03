@@ -1,6 +1,7 @@
 package com.tmallspringboot.demo.service;
 
 import com.tmallspringboot.demo.dao.ProductImageDAO;
+import com.tmallspringboot.demo.pojo.OrderItem;
 import com.tmallspringboot.demo.pojo.Product;
 import com.tmallspringboot.demo.pojo.ProductImage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,17 +38,24 @@ public class ProductImageService {
         return productImageDAO.findByProductAndTypeOrderByIdDesc(product, type_detail);
     }
 
-    public void setFirstProdutImage(Product product) {
+    public void setFirstProductImage(Product product) {
         List<ProductImage> singleImages = listSingleProductImages(product);
         if(!singleImages.isEmpty())
+            //
             product.setFirstProductImage(singleImages.get(0));
         else
             product.setFirstProductImage(new ProductImage());
         //考虑到产品还没有来得及设置图片，但是在订单后台管理里查看订单项的对应产品图片。
 
     }
-    public void setFirstProdutImages(List<Product> products) {
+    public void setFirstProductImages(List<Product> products) {
         for (Product product : products)
-            setFirstProdutImage(product);
+            setFirstProductImage(product);
+    }
+
+    public void setFirstProductImageForOrderItems(List<OrderItem> ois) {
+        ois.parallelStream().forEach(orderItem -> {
+            setFirstProductImage(orderItem.getProduct());
+        });
     }
 }

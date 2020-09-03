@@ -1,5 +1,7 @@
 package com.tmallspringboot.demo.web;
 
+import lombok.val;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -75,7 +77,11 @@ public class FrontPageController {
     }
     @GetMapping("/frontlogout")
     public String logout(HttpSession session) {
-        session.removeAttribute("user");
+        //session.removeAttribute("user");
+        val subject = SecurityUtils.getSubject();
+        if (subject.isAuthenticated()) {
+            subject.logout();
+        }
         return "redirect:home";
     }
 
