@@ -5,9 +5,15 @@ import com.tmallspringboot.demo.comparator.ProductAllComparator;
 import com.tmallspringboot.demo.comparator.ProductReviewComparator;
 import com.tmallspringboot.demo.comparator.ProductSaleCountComparator;
 import com.tmallspringboot.demo.dao.ProductDAO;
+import com.tmallspringboot.demo.es.ProductESDAO;
 import com.tmallspringboot.demo.pojo.Category;
 import com.tmallspringboot.demo.pojo.Product;
 import com.tmallspringboot.demo.util.Page4Navigator;
+import org.apache.lucene.search.ScoreMode;
+import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,6 +34,8 @@ import java.util.List;
 public class ProductService {
     @Autowired
     ProductDAO productDAO;
+    @Autowired
+    ProductESDAO productESDAO;
     @Autowired
     CategoryService categoryService;
     @Autowired
@@ -39,11 +49,13 @@ public class ProductService {
     @CacheEvict(allEntries = true)
     public void add(Product bean) {
         productDAO.save(bean);
+        productESDAO.save(bean);
     }
 
     @CacheEvict(allEntries = true)
     public void delete(int id) {
         productDAO.deleteById(id);
+        productESDAO.deleteById(id);
     }
 
 
@@ -55,6 +67,19 @@ public class ProductService {
     @CacheEvict(allEntries = true)
     public void update(Product bean) {
         productDAO.save(bean);
+        productESDAO.save(bean);
+    }
+
+    private void initDatabase2ES() {
+        Sort sort;
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Product> page = productESDAO.findAll(pageable);
+        if (page.getContent().isEmpty()) {
+            List<Product> products = productDAO.findAll();
+            for (Product product : products) {
+                productESDAO.save(product);
+            }
+        }
     }
 
     @Cacheable
@@ -68,10 +93,22 @@ public class ProductService {
 
     @Cacheable
     public List<Product> search(String keyword, int start, int size) {
+//        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+//        Pageable pageable = PageRequest.of(start, size, sort);
+//        var ps = productDAO.findByNameLike("%" + keyword + "%", pageable);
+//        return ps;
+        initDatabase2ES();
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery(
+                QueryBuilders.matchPhraseQuery("name", keyword),
+                ScoreFunctionBuilders.weightFactorFunction(100)
+        ).scoreMode(FunctionScoreQuery.ScoreMode.SUM).setMinScore(10);
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
         Pageable pageable = PageRequest.of(start, size, sort);
-        var ps = productDAO.findByNameLike("%" + keyword + "%", pageable);
-        return ps;
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withPageable(pageable)
+                .withQuery(functionScoreQueryBuilder).build();
+        Page<Product> page = productESDAO.search(searchQuery);
+        return page.getContent();
     }
 
 

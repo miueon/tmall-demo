@@ -30,4 +30,6 @@ spring:
         max-idle: 8
         min-idle: 0
     timeout: 0
-
+  data:
+    elasticsearch:
+      cluster-nodes: 127.0.0.1:9300

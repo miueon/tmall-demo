@@ -13,6 +13,7 @@ import java.util.List;
 @JsonIgnoreProperties({"handler", "hibernateLazyInitializer"})
 //@Document(indexName = "tmall_springboot")
 @Data
+@Document(indexName = "tmall_springboot", type = "product") // tell the es how to query
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
